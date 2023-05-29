@@ -10,6 +10,7 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <elf.h>
 
 typedef struct s_file_handler {
     int fd;
