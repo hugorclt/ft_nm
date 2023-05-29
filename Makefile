@@ -25,7 +25,7 @@ $(OBJS_DIR)/%.o	: 	srcs/%.c
 all	: $(NAME)
 
 $(NAME)	: 			$(OBJS_DIR) $(OBJS)
-		      		@$(CC) $(CFLAGS) $(OBJS) -o $(NAME) -lreadline 
+		      		@$(CC) $(CFLAGS) $(OBJS) -o $(NAME) 
 					@echo "\033[1;32m\nnm: Done!\033[0m"
 
 clean	:
