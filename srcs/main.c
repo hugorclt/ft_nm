@@ -23,16 +23,17 @@ int main(int ac, char **av) {
     }
 
     
-    char    *file = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, file_handler.fd, 0);
-    Elf32_Ehdr *header = (Elf32_Ehdr *)file;
-    Elf32_Shdr *sections = (Elf32_Shdr *)((char *)file + header->e_shoff);
-    for (int i = 0; i < header->e_shnum; i++) {
+    char    *data = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, file_handler.fd, 0);
+    Elf64_Ehdr *elf = (Elf64_Ehdr *)data;
+    Elf64_Shdr *sections = (Elf64_Shdr *)((char *)data + elf->e_shoff);
+    for (int i = 0; i < elf->e_shnum; i++) {
         if (sections[i].sh_type == SHT_SYMTAB) {
-            Elf32_Sym *symtab = (Elf32_Sym *)((char *)file + sections[i].sh_offset);
-            printf("%d\n", symtab->st_name);
+            Elf64_Sym *symtab = (Elf64_Sym *)((char *)data + sections[i].sh_offset);
+            for (int j = 0; j < 10; j++) {
+                printf("%c\n", symtab[j].st_other);
+            }
             break; 
         }
     }
-
 
 }
