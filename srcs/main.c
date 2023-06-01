@@ -26,13 +26,18 @@ int main(int ac, char **av) {
     char    *data = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, file_handler.fd, 0);
     Elf64_Ehdr *elf = (Elf64_Ehdr *)data;
     Elf64_Shdr *sections = (Elf64_Shdr *)((char *)data + elf->e_shoff);
+    char *section_names = (char *)(data + sections[elf->e_shstrndx].sh_offset);
+
     for (int i = 0; i < elf->e_shnum; i++) {
         if (sections[i].sh_type == SHT_SYMTAB) {
+                    printf("Symobl table %s:\n",  section_names + sections[i].sh_name);
             Elf64_Sym *symtab = (Elf64_Sym *)((char *)data + sections[i].sh_offset);
-            for (int j = 0; j < 10; j++) {
-                printf("%c\n", symtab[j].st_other);
+            int symbol_num = sections[i].sh_size/sections[i].sh_entsize;
+            char *symbol_names = (char *)(data + sections[sections[i].sh_link].sh_offset);
+            for (int j=0; j<symbol_num; j++) {
+                if (symtab[j].st_name)
+                    printf("name : %s\n", symbol_names + symtab[j].st_name);
             }
-            break; 
         }
     }
 
