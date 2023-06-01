@@ -7,6 +7,12 @@ bool    open_file(char *filename, t_file_handler *file_handler) {
     return (true);
 }
 
+char    *getType(unsigned char info, unsigned char other) {
+    const int bind = ELF64_ST_BIND(info);
+    const int type = ELF64_ST_TYPE(info);
+    const int visibility = ELF64_ST_VISIBILITY(other);
+}
+
 int main(int ac, char **av) {
     if (ac != 2)
         return (EXIT_FAILURE);
@@ -35,8 +41,10 @@ int main(int ac, char **av) {
             int symbol_num = sections[i].sh_size/sections[i].sh_entsize;
             char *symbol_names = (char *)(data + sections[sections[i].sh_link].sh_offset);
             for (int j=0; j<symbol_num; j++) {
-                if (symtab[j].st_name)
-                    printf("name : %s\n", symbol_names + symtab[j].st_name);
+                if (symtab[j].st_name) {
+                    char    *type = getType(symtab[j].st_info, symtab[j].st_other);
+                    printf("name : %lx %s %s\n", symtab[j].st_value, type ,symbol_names + symtab[j].st_name);
+                }
             }
         }
     }
