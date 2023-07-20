@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <elf.h>
+#include <string.h>
 
 typedef struct s_file_handler {
     int fd;
