@@ -13,6 +13,17 @@
 #include <elf.h>
 #include <string.h>
 
-typedef struct s_file_handler {
-    int fd;
-}   t_file_handler;
+typedef struct s_sym_data {
+    long unsigned int    value;
+    char        symbol;
+    char        *name;
+}   t_sym_data;
+
+# define BITS_64 1
+# define BITS_32 0
+
+int	get_file_size(int fd);
+int open_file(char *filename);
+void    print_structure(t_sym_data *data, size_t len);
+int check_magic_number(char *data);
+int check_architecture(char *data);
