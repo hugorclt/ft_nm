@@ -19,21 +19,53 @@ void    sort_data(t_sym_data *data, size_t len) {
     }
 }
 
+// type to do: 'G' 'g' 'i' 'N' 'p' 'S' 's' '-'
 char	find_symbols(Elf64_Sym symtab, Elf64_Shdr *sections)
 {
 	char c;
 
-	if (symtab.st_shndx == SHN_UNDEF)
+	if (ELF64_ST_BIND(symtab.st_info) == STB_GNU_UNIQUE)
+		c = 'u';
+	else if (ELF64_ST_BIND(symtab.st_info) == STB_WEAK)
+	{
+		c = 'W';
+		if (symtab.st_shndx == SHN_UNDEF)
+			c = 'w';
+	}
+	else if (ELF64_ST_BIND(symtab.st_info) == STB_WEAK && ELF64_ST_TYPE(symtab.st_info) == STT_OBJECT)
+	{
+		c = 'V';
+		if (symtab.st_shndx == SHN_UNDEF)
+			c = 'v';
+	}
+	else if (symtab.st_shndx == SHN_UNDEF)
 		c = 'U';
-	else if (sections[symtab.st_shndx].sh_flags == SHF_EXECINSTR)
+	else if (symtab.st_shndx == SHN_ABS)
+		c = 'A';
+	else if (symtab.st_shndx == SHN_COMMON)
+		c = 'C';
+	else if (sections[symtab.st_shndx].sh_type == SHT_PROGBITS
+			&& sections[symtab.st_shndx].sh_flags == (SHF_ALLOC | SHF_WRITE))
+		c = 'D';
+	else if (sections[symtab.st_shndx].sh_type == SHT_NOBITS
+			&& sections[symtab.st_shndx].sh_flags == (SHF_ALLOC | SHF_WRITE))
+		c = 'B';
+	else if (sections[symtab.st_shndx].sh_type == SHT_PROGBITS
+			&& sections[symtab.st_shndx].sh_flags == (SHF_ALLOC | SHF_EXECINSTR))
 		c = 'T';
+	else if (sections[symtab.st_shndx].sh_type == SHT_PROGBITS
+			&& sections[symtab.st_shndx].sh_flags == (SHF_ALLOC))
+		c = 'R';
 	else
+	{
 		c = '?';
+	}
 	
-	if (c != '?' && ELF64_ST_BIND(symtab.st_info) == STB_LOCAL)
+	if (c != '?' && ELF64_ST_BIND(symtab.st_info) == STB_LOCAL) // local symbol are in lowercase
 		c += 32;
 
 	return (c);
+
 }
 
 int main(int ac, char **av) {
