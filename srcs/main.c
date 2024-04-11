@@ -1,8 +1,8 @@
 #include "nm.h"
 
 void    swap_data(t_sym_data *data, size_t idx1, size_t idx2) {
-    t_sym_data  *temp = malloc(sizeof(t_sym_data) * 1000);
-    temp->name =malloc(sizeof(char) * 1000);
+    t_sym_data  *temp = malloc(sizeof(t_sym_data));
+    temp->name =malloc(sizeof(char) * strlen(data[idx1].name));
 
     memcpy(temp, data + idx1, sizeof(data[idx1]));
     memcpy(data + idx1, data + idx2,sizeof(data[idx1]));
@@ -19,120 +19,69 @@ void    sort_data(t_sym_data *data, size_t len) {
     }
 }
 
-// type to do: 'N' 'p' '-'
-char	find_symbols(Elf64_Sym symtab, Elf64_Shdr *sections)
+void	process_file(char *filename)
 {
-	char c;
-
-	if (ELF64_ST_BIND(symtab.st_info) == STB_GNU_UNIQUE)
-		c = 'u';
-	if (ELF64_ST_BIND(symtab.st_info) == STT_GNU_IFUNC)
-		c = 'i';
-	else if (ELF64_ST_BIND(symtab.st_info) == STB_WEAK)
-	{
-		c = 'W';
-		if (symtab.st_shndx == SHN_UNDEF)
-			c = 'w';
-	}
-	else if (ELF64_ST_BIND(symtab.st_info) == STB_WEAK && ELF64_ST_TYPE(symtab.st_info) == STT_OBJECT)
-	{
-		c = 'V';
-		if (symtab.st_shndx == SHN_UNDEF)
-			c = 'v';
-	}
-	else if (symtab.st_shndx == SHN_UNDEF)
-		c = 'U';
-	else if (symtab.st_shndx == SHN_ABS)
-		c = 'A';
-	else if (symtab.st_shndx == SHN_COMMON)
-		c = 'C';
-	else if (sections[symtab.st_shndx].sh_type == SHT_NOBITS
-			&& sections[symtab.st_shndx].sh_flags == (SHF_ALLOC | SHF_WRITE | SHF_IA_64_SHORT))
-		c = 'S';
-	else if (sections[symtab.st_shndx].sh_type == SHT_PROGBITS
-			&& sections[symtab.st_shndx].sh_flags == (SHF_ALLOC | SHF_WRITE | SHF_IA_64_SHORT))
-		c = 'G';
-	else if (sections[symtab.st_shndx].sh_type == SHT_PROGBITS
-			&& sections[symtab.st_shndx].sh_flags == (SHF_ALLOC | SHF_WRITE))
-		c = 'D';
-	else if (sections[symtab.st_shndx].sh_type == SHT_NOBITS
-			&& sections[symtab.st_shndx].sh_flags == (SHF_ALLOC | SHF_WRITE))
-		c = 'B';
-	else if (sections[symtab.st_shndx].sh_type == SHT_PROGBITS
-			&& sections[symtab.st_shndx].sh_flags == (SHF_ALLOC | SHF_EXECINSTR))
-		c = 'T';
-	else if (sections[symtab.st_shndx].sh_type == SHT_PROGBITS
-			&& sections[symtab.st_shndx].sh_flags == (SHF_ALLOC))
-		c = 'R';
-	else
-	{
-		c = '?';
-	}
-	
-	if (c != '?' && ELF64_ST_BIND(symtab.st_info) == STB_LOCAL) // local symbol are in lowercase
-		c += 32;
-
-	return (c);
-
-}
-
-int main(int ac, char **av) {
-    if (ac != 2)
-	{
-		printf("Error: usage %s {file_to_load}\n", av[0]);
-		return (EXIT_FAILURE);
-	}
-	int fd = open_file(av[1]);
+	int fd = open_file(filename != NULL ? filename : "a.out");
 	if (fd == -1)
-		return (EXIT_FAILURE);
+	{
+		printf("Error: %s failed to open file\n", filename);
+		return ; 
+	}
 
 	int file_size = get_file_size(fd);
 	if (file_size == -1)
-		return (EXIT_FAILURE);
+	{
+		printf("Error: %s unable to retrieve file size\n", filename);
+		close(fd);
+		return ;
+	}
 
 	char    *data = mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (data == MAP_FAILED)
-		return (EXIT_FAILURE);
+	{
+		printf("Error: %s memory mapping failed\n", filename);
+		close(fd);
+		return ;
+	}
 
 	if (check_magic_number(data) == -1)
 	{
-		printf("Error: magic number error, not an elf file\n");
+		printf("Error: %s magic number error, not an elf file\n", filename);
 		munmap(data, file_size);
-		return (EXIT_FAILURE);
+		close(fd);
+		return ;
 	}
 
 	int architecture_type = check_architecture(data);
 	if (architecture_type == -1)
 	{
+		printf("Error: %s architecture not recognized", filename);
 		munmap(data, file_size);
-		return (EXIT_FAILURE);
+		close(fd);
+		return ;
 	}
+	
+	if (architecture_type == BITS_64)
+		find_symbols64(data);
+	else
+		find_symbols32(data);
+	
 
-	t_sym_data      *sym_data = NULL; 
-    Elf64_Ehdr *elf = (Elf64_Ehdr *)data;
-    Elf64_Shdr *sections = (Elf64_Shdr *)((char *)data + elf->e_shoff);
-
-
-    int len = 0;
-    for (int i = 0; i < elf->e_shnum; i++) {
-        if (sections[i].sh_type == SHT_SYMTAB) {
-            Elf64_Sym *symtab = (Elf64_Sym *)((char *)data + sections[i].sh_offset);
-            int symbol_num = sections[i].sh_size / sections[i].sh_entsize;
-            char *symbol_names = (char *)(data + sections[sections[i].sh_link].sh_offset);
-
-		 	sym_data = malloc(sizeof(t_sym_data) * symbol_num);
-			for (int j=0; j<symbol_num; j++) {
-                if (symtab[j].st_name) {
-                    sym_data[len].value = symtab[j].st_value;
-					printf("%s\n", data + elf->e_shstrndx + symtab[j].st_name);
-                    sym_data[len].symbol = find_symbols(symtab[j], sections);
-                    sym_data[len].name = strdup(symbol_names + symtab[j].st_name);
-                    len++;
-                }
-            }
-        }
-    }
-
-    sort_data(sym_data, len);
-    print_structure(sym_data, len);
+	munmap(data, file_size);
+	close(fd);
 }
+
+int main(int ac, char **av) {
+	if (ac == 1)
+	{
+		process_file("a.out");
+		return (EXIT_SUCCESS);
+	}
+	for (int i = 1; i < ac; i++)
+	{
+		printf("%s:\n", av[i]);
+		process_file(av[i]);
+	}
+	return (EXIT_SUCCESS);
+}
+

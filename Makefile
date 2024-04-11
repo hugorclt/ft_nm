@@ -1,7 +1,7 @@
 
 NAME		=	ft_nm
 
-SRCS		=	$(wildcard *.c) $(wildcard */*.c)
+SRCS		=	$(wildcard *.c) $(wildcard */*.c) $(wildcard */*/*.c)
 
 INCL_DIR	=	-I./includes
 
@@ -19,6 +19,12 @@ $(OBJS_DIR)	:
 				@mkdir -p $(OBJS_DIR)
 
 $(OBJS_DIR)/%.o	: 	srcs/%.c
+					@printf "\033[0;33mGenerating nm object... %-38.38s \r" $@
+					@$(CC) $(CFLAGS) -c $< -o $@ -MMD $(INCL_DIR)
+$(OBJS_DIR)/%.o	: 	srcs/32/%.c
+					@printf "\033[0;33mGenerating nm object... %-38.38s \r" $@
+					@$(CC) $(CFLAGS) -c $< -o $@ -MMD $(INCL_DIR)
+$(OBJS_DIR)/%.o	: 	srcs/64/%.c
 					@printf "\033[0;33mGenerating nm object... %-38.38s \r" $@
 					@$(CC) $(CFLAGS) -c $< -o $@ -MMD $(INCL_DIR)
 

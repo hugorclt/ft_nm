@@ -18,7 +18,6 @@ int check_architecture(char *data)
 	int arch_type = data[4];
 
 	if (arch_type == 0) {
-		printf("Error: architecture not recognized\n");
 		return (-1);
 	}
 	else if (arch_type == 1)
