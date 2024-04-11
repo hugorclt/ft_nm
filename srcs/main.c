@@ -19,13 +19,15 @@ void    sort_data(t_sym_data *data, size_t len) {
     }
 }
 
-// type to do: 'G' 'g' 'i' 'N' 'p' 'S' 's' '-'
+// type to do: 'N' 'p' '-'
 char	find_symbols(Elf64_Sym symtab, Elf64_Shdr *sections)
 {
 	char c;
 
 	if (ELF64_ST_BIND(symtab.st_info) == STB_GNU_UNIQUE)
 		c = 'u';
+	if (ELF64_ST_BIND(symtab.st_info) == STT_GNU_IFUNC)
+		c = 'i';
 	else if (ELF64_ST_BIND(symtab.st_info) == STB_WEAK)
 	{
 		c = 'W';
@@ -44,6 +46,12 @@ char	find_symbols(Elf64_Sym symtab, Elf64_Shdr *sections)
 		c = 'A';
 	else if (symtab.st_shndx == SHN_COMMON)
 		c = 'C';
+	else if (sections[symtab.st_shndx].sh_type == SHT_NOBITS
+			&& sections[symtab.st_shndx].sh_flags == (SHF_ALLOC | SHF_WRITE | SHF_IA_64_SHORT))
+		c = 'S';
+	else if (sections[symtab.st_shndx].sh_type == SHT_PROGBITS
+			&& sections[symtab.st_shndx].sh_flags == (SHF_ALLOC | SHF_WRITE | SHF_IA_64_SHORT))
+		c = 'G';
 	else if (sections[symtab.st_shndx].sh_type == SHT_PROGBITS
 			&& sections[symtab.st_shndx].sh_flags == (SHF_ALLOC | SHF_WRITE))
 		c = 'D';
@@ -116,6 +124,7 @@ int main(int ac, char **av) {
 			for (int j=0; j<symbol_num; j++) {
                 if (symtab[j].st_name) {
                     sym_data[len].value = symtab[j].st_value;
+					printf("%s\n", data + elf->e_shstrndx + symtab[j].st_name);
                     sym_data[len].symbol = find_symbols(symtab[j], sections);
                     sym_data[len].name = strdup(symbol_names + symtab[j].st_name);
                     len++;
