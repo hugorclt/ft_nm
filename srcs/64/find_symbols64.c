@@ -78,11 +78,11 @@ void	find_symbols64(char *data)
 					if (symtab[j].st_shndx == 65521)
 						continue ;
 					sym_data[len].value = symtab[j].st_value;
-					if (strncmp(".debug", string_table + sections[symtab[j].st_shndx].sh_name, 6) == 0 || strncmp(".group", string_table + sections[symtab[j].st_shndx].sh_name, 6) == 0)
-						sym_data[len].symbol = 'N';
+					if (ft_strncmp(".debug", string_table + sections[symtab[j].st_shndx].sh_name, 6) == 0 || ft_strncmp(".group", string_table + sections[symtab[j].st_shndx].sh_name, 6) == 0)
+						sym_data[len].symbol = 'n';
 					else
 						sym_data[len].symbol = find_symbols_type64(symtab[j], sections);
-					sym_data[len].name = strdup(symbol_names + symtab[j].st_name);
+					sym_data[len].name = ft_strdup(symbol_names + symtab[j].st_name);
 					len++;
 				}
 			}

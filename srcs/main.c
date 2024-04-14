@@ -1,19 +1,22 @@
 #include "nm.h"
 
-void    swap_data(t_sym_data *data, size_t idx1, size_t idx2) {
-    t_sym_data  *temp = malloc(sizeof(t_sym_data));
-    temp->name =malloc(sizeof(char) * strlen(data[idx1].name));
+t_sym_data	*swap_data(t_sym_data *data, size_t idx1, size_t idx2) {
+    t_sym_data temp;
 
-    memcpy(temp, data + idx1, sizeof(data[idx1]));
-    memcpy(data + idx1, data + idx2,sizeof(data[idx1]));
-    memcpy(data + idx2, temp,sizeof(data[idx1]));
+    temp.name = ft_strdup(data[idx1].name);
+    temp.symbol = data[idx1].symbol;
+    temp.value = data[idx1].value;
+    free(data[idx1].name);
+    data[idx1] = data[idx2];
+    data[idx2] = temp;
+    return (data);
 }
 
 void    sort_data(t_sym_data *data, size_t len) {
     for (size_t i =0; i < len; i++) {
         for (size_t j = 0; j < len - 1 - i; j++) {
-            if (strcmp(data[j].name, data[j + 1].name) > 0) {
-                swap_data(data, j, j + 1);
+            if (ft_strncmp(data[j].name, data[j + 1].name, ft_strlen(data[j].name)) > 0) {
+                data = swap_data(data, j, j + 1);
             }
         }
     }

@@ -1,9 +1,9 @@
 
 NAME		=	ft_nm
 
-SRCS		=	$(wildcard *.c) $(wildcard */*.c) $(wildcard */*/*.c)
+SRCS		=	$(wildcard srcs/*.c) $(wildcard srcs/*/*.c)
 
-INCL_DIR	=	-I./includes
+INCL_DIR	=	-I./includes -I./libs/libft
 
 CC			=	gcc
 
@@ -31,7 +31,8 @@ $(OBJS_DIR)/%.o	: 	srcs/64/%.c
 all	: $(NAME)
 
 $(NAME)	: 			$(OBJS_DIR) $(OBJS)
-		      		@$(CC) $(CFLAGS) $(OBJS) -o $(NAME) 
+				@$(MAKE) --no-print-directory -C libs/libft
+		      		@$(CC) $(CFLAGS) $(OBJS) libs/libft/libft.a -o $(NAME) 
 					@echo "\033[1;32m\nnm: Done!\033[0m"
 
 clean	:

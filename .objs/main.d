@@ -1,1 +1,1 @@
-.objs/main.o: srcs/main.c includes/nm.h
+.objs/main.o: srcs/main.c includes/nm.h libs/libft/libft.h
